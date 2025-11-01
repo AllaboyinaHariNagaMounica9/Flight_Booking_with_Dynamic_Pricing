@@ -1,161 +1,175 @@
-# 🎨 SkySwap Frontend – Flight Booking System (React)
+# 🗄️ FlightBookingDB – Database Documentation
 
-This is the **frontend user interface** for the **SkySwap Flight Booking System**, built with **React**, **Tailwind CSS**, and **Framer Motion**.  
-It provides an animated, interactive, and user-friendly interface for searching, booking, and managing flight reservations.
+This document describes the **MySQL database** structure for the **SkySwap Flight Booking System**, used in the Infosys Springboard Milestone 4 project.
 
----
-
-## ✈️ Overview
-
-The **SkySwap Frontend** connects to the FastAPI backend and database to deliver a complete real-time flight booking simulation.  
-It allows users to:
-
-- 🔍 Search for flights between cities  
-- 💸 View dynamic pricing fetched from backend APIs  
-- 🧾 Book flights through an interactive multi-step form  
-- 💳 Simulate payments securely  
-- 📄 Download digital booking receipts (JSON format)  
-- 🕓 Review booking history  
+The database stores all flight, airline, airport, and booking information required for the **backend (FastAPI)** and **frontend (React)** integration.
 
 ---
 
-## 🧩 Tech Stack
+## 🧩 Database Overview
 
-| Component | Technology |
-|------------|-------------|
-| **Frontend Framework** | React (Functional Components + Hooks) |
-| **Styling** | Tailwind CSS |
-| **Animations** | Framer Motion |
-| **API Integration** | Fetch API |
-| **Backend Base URL** | `http://localhost:8000` (FastAPI) |
+**Database Name:** `FlightBookingDB`
+
+This database is designed to support:
+- Real-time flight information
+- Airline and airport data
+- Passenger and booking details
+- Dynamic pricing simulation
+
+---
+
+## 📊 Database Schema
+
+### 1. 🛫 **Airlines Table**
+Stores airline company information.
+
+| Column | Type | Constraints | Description |
+|---------|------|--------------|--------------|
+| `AirlineID` | INT | PRIMARY KEY, AUTO_INCREMENT | Unique airline ID |
+| `AirlineName` | VARCHAR(100) | NOT NULL | Name of the airline |
+| `Logo` | VARCHAR(255) | NULL | Airline logo URL |
+
+---
+
+### 2. 🏢 **Airports Table**
+Stores details about airports and their IATA codes.
+
+| Column | Type | Constraints | Description |
+|---------|------|--------------|--------------|
+| `AirportID` | INT | PRIMARY KEY, AUTO_INCREMENT | Unique airport ID |
+| `AirportName` | VARCHAR(100) | NOT NULL | Airport name |
+| `IATA_Code` | VARCHAR(10) | UNIQUE, NOT NULL | IATA airport code (e.g., DEL, HYD) |
+| `City` | VARCHAR(100) | NOT NULL | City name of the airport |
+
+---
+
+### 3. ✈️ **Flights Table**
+Holds flight-related information, linked to both **Airlines** and **Airports**.
+
+| Column | Type | Constraints | Description |
+|---------|------|--------------|--------------|
+| `FlightID` | INT | PRIMARY KEY, AUTO_INCREMENT | Unique flight ID |
+| `FlightNumber` | VARCHAR(10) | UNIQUE, NOT NULL | Flight number (e.g., SKY301) |
+| `AirlineID` | INT | FOREIGN KEY REFERENCES `Airlines(AirlineID)` | Airline operating the flight |
+| `SourceAirportID` | INT | FOREIGN KEY REFERENCES `Airports(AirportID)` | Origin airport |
+| `DestinationAirportID` | INT | FOREIGN KEY REFERENCES `Airports(AirportID)` | Destination airport |
+| `DepartureTime` | DATETIME | NOT NULL | Scheduled departure time |
+| `ArrivalTime` | DATETIME | NOT NULL | Scheduled arrival time |
+| `TotalSeats` | INT | NOT NULL | Total available seats |
+| `BaseFare` | DECIMAL(10,2) | NOT NULL | Base fare for the flight |
+| `FlightStatus` | VARCHAR(20) | DEFAULT 'On Time' | Current flight status |
+
+---
+
+### 4. 👤 **Bookings Table**
+Stores user bookings and passenger details.
+
+| Column | Type | Constraints | Description |
+|---------|------|--------------|--------------|
+| `BookingID` | VARCHAR(20) | PRIMARY KEY | Unique booking ID or PNR |
+| `FlightID` | INT | FOREIGN KEY REFERENCES `Flights(FlightID)` | Flight booked |
+| `PassengerName` | VARCHAR(100) | NOT NULL | Name of the passenger |
+| `Age` | INT | NULL | Passenger age |
+| `Gender` | VARCHAR(10) | NULL | Gender of passenger |
+| `SeatNumber` | VARCHAR(10) | NULL | Assigned seat number |
+| `BookingTime` | DATETIME | DEFAULT CURRENT_TIMESTAMP | Timestamp of booking |
+| `FarePaid` | DECIMAL(10,2) | NULL | Fare paid at the time of booking |
+
+---
+
+## 🔗 Relationships
+
+- Each **Flight** belongs to one **Airline**  
+- Each **Flight** departs from one **Airport** and arrives at another  
+- Each **Booking** is linked to one **Flight**  
+
+**ER Diagram Summary:**
+```
+
+Airlines (1) ────< Flights >──── (1) Airports
+|
+|
+V
+Bookings
+
+````
 
 ---
 
 ## ⚙️ Setup Instructions
 
-### 1️⃣ Prerequisites
-Make sure you have:
-- Node.js 18+  
-- npm or yarn  
-- Backend running at `http://localhost:8000`  
-
----
-
-### 2️⃣ Installation
-
-Clone and install dependencies:
-
+### 1️⃣ Create Database
 ```bash
-git clone https://github.com/your-username/FlightBooking-Frontend.git
-cd FlightBooking-Frontend
-npm install
+CREATE DATABASE FlightBookingDB;
+USE FlightBookingDB;
 ````
 
----
+### 2️⃣ Import SQL File
 
-### 3️⃣ Run the Frontend
+Run this command in MySQL CLI or any SQL client:
 
 ```bash
-npm start
+SOURCE DATABASE.sql;
 ```
 
-Then open your browser at:
-
-```
-http://localhost:3000
-```
-
-The app will automatically connect to the backend (`http://localhost:8000`) for flight data and bookings.
+This will automatically create all tables and sample data if included.
 
 ---
 
-## 🧠 File Structure
+## 🧾 Example Queries
 
-```
-frontend/
-│
-├── APP.js              # Main React component (full UI + logic)
-├── index.js            # App entry point
-├── package.json        # Dependencies and scripts
-├── public/             # Static assets
-└── tailwind.config.js  # Tailwind configuration
-```
+### 🔍 View all flights
 
----
-
-## 💡 Features
-
-✅ **Animated Home Page** – Smooth motion transitions using Framer Motion
-✅ **Flight Search** – Users can search by IATA airport codes
-✅ **Dynamic Pricing** – Real-time fare updates fetched from backend
-✅ **Multi-Step Booking Flow** – Search → Booking → Payment → Confirmation
-✅ **JSON Receipt Download** – Digital booking receipt generation
-✅ **Booking History Page** – Displays all past reservations
-✅ **Fully Responsive Design** – Works on desktop and mobile
-
----
-
-## 🔗 API Integration Points
-
-| Purpose              | Method | Endpoint               |
-| -------------------- | ------ | ---------------------- |
-| Fetch all flights    | `GET`  | `/flights/`            |
-| Get flight pricing   | `GET`  | `/pricing/{flight_id}` |
-| Create a new booking | `POST` | `/booking/reserve`     |
-
-All APIs are fetched from the backend defined in:
-
-```js
-const API_BASE = "http://localhost:8000";
+```sql
+SELECT f.FlightNumber, a.AirlineName, s.City AS Source, d.City AS Destination, f.BaseFare
+FROM Flights f
+JOIN Airlines a ON f.AirlineID = a.AirlineID
+JOIN Airports s ON f.SourceAirportID = s.AirportID
+JOIN Airports d ON f.DestinationAirportID = d.AirportID;
 ```
 
----
+### 🧍 Passenger Bookings
 
-## 🎨 UI Pages
-
-1️⃣ **Home Page** – Animated landing with a call-to-action button
-2️⃣ **Flight Search Page** – Search by source and destination
-3️⃣ **Booking Page** – Passenger entry and seat selection
-4️⃣ **Payment Page** – Secure payment simulation
-5️⃣ **Confirmation Page** – Displays generated PNR and allows receipt download
-6️⃣ **History Page** – Shows previous booking details
-
----
-
-## 🧾 Example Receipt (JSON)
-
-```json
-{
-  "BookingID": "PNR47GFZ2",
-  "Flight": "AI302",
-  "Airline": "Air India",
-  "Passengers": [
-    { "name": "Hari", "age": 24, "gender": "Female" }
-  ],
-  "Time": "2025-11-01T18:23:00"
-}
+```sql
+SELECT BookingID, PassengerName, SeatNumber, FarePaid, BookingTime
+FROM Bookings
+ORDER BY BookingTime DESC;
 ```
 
 ---
 
 ## 🧠 Notes
 
-* Ensure the backend server (`FastAPI`) is **running first** before launching the frontend.
-* You can edit the base API URL in `APP.js` if the backend is hosted remotely.
-* The app uses **Tailwind CSS utility classes** for styling and **Framer Motion** for animations.
+* Ensure MySQL server is running before backend startup.
+* The backend (`flightbooking_db.py`) connects to this database using environment credentials:
+
+  ```python
+  MYSQL_USER = "root"
+  MYSQL_PASSWORD = "yourpassword"
+  MYSQL_DB = "FlightBookingDB"
+  MYSQL_HOST = "localhost"
+  ```
+* You can modify or extend the schema for additional features like **cancellations**, **payments**, or **seat management**.
 
 ---
 
-## 👩‍💻 Developer
+## 🏁 Summary
 
-**Name:** Hari Mounica
+This database serves as the **core data layer** for the SkySwap Flight Booking System.
+It provides structured and relational storage for:
+
+* Flight scheduling
+* Passenger management
+* Booking history
+* Airline and airport data
+
+It ensures reliable integration with the FastAPI backend and React frontend for a complete flight booking experience.
+
+---
+
+**Developer:** Hari Mounica
 **College:** Sir C.R. Reddy College of Engineering (JNTUK)
-**Course:** B.Tech – Computer Science Engineering (3rd Year)
 **Project:** Infosys Springboard – Milestone 4 (Weeks 7–8)
-**Module:** Frontend UI & API Integration
-
----
-
-### ✨ “Fast. Animated. Interactive. Welcome aboard SkySwap!”
+**Module:** Database Design and Integration
 
 ```
